@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from textual.app import App
 from textual.containers import Grid
+from textual.widgets import Static
 
 from term_dashboard.config import load_env, load_global_config, load_tile_configs
 from term_dashboard.tiles.financial_times import FinancialTimesTile
@@ -34,6 +36,15 @@ class DashboardApp(App):
     #grid {
         width: 100%;
         height: 100%;
+    }
+
+    #footer {
+        dock: bottom;
+        height: 1;
+        padding: 0 1;
+        background: #0b0f17;
+        color: #8b949e;
+        content-align: right middle;
     }
 
     .tile-header {
@@ -66,6 +77,7 @@ class DashboardApp(App):
         self.global_config = load_global_config(self.base_dir)
         self.tile_configs = load_tile_configs(self.base_dir)
         self.tiles = self._build_tiles()
+        self._last_refresh = datetime.now()
 
     def _build_tiles(self) -> list[Any]:
         tiles = []
@@ -80,9 +92,11 @@ class DashboardApp(App):
         with Grid(id="grid"):
             for tile in self.tiles:
                 yield tile
+        yield Static(self._footer_text(), id="footer")
 
     async def on_mount(self) -> None:
         self._apply_grid_layout()
+        self.set_last_refresh(self._last_refresh)
 
     async def on_resize(self) -> None:
         self._apply_grid_layout()
@@ -97,6 +111,14 @@ class DashboardApp(App):
         columns = max(1, min(max_columns, width // min_width))
         grid.styles.grid_size_columns = columns
         grid.styles.grid_gutter = (gap, gap)
+
+    def set_last_refresh(self, when: datetime | None = None) -> None:
+        self._last_refresh = when or datetime.now()
+        footer = self.query_one("#footer", Static)
+        footer.update(self._footer_text())
+
+    def _footer_text(self) -> str:
+        return f"Last refresh: {self._last_refresh.strftime('%a %H:%M:%S')}"
 
 
 def run() -> None:

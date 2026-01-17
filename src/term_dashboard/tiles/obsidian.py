@@ -36,6 +36,9 @@ class ObsidianSearchTile(ListTile):
         if self.input:
             self.input.focus()
 
+    async def refresh_tile(self) -> None:
+        return
+
     async def on_input_submitted(self, event: Input.Submitted) -> None:
         await self._run_search(event.value.strip(), debounce=False)
 

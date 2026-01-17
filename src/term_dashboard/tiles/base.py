@@ -74,6 +74,9 @@ class BaseTile(Container):
         try:
             data = await asyncio.to_thread(self.fetch_data)
             self.render_data(data)
+            set_last_refresh = getattr(self.app, "set_last_refresh", None)
+            if callable(set_last_refresh):
+                set_last_refresh()
         except Exception as exc:  # noqa: BLE001
             self.render_error(str(exc))
 
@@ -113,6 +116,9 @@ class ListTile(BaseTile):
                 color="#d9e2f2",
             )
             self.body.append(row)
+
+    def render_error(self, message: str) -> None:
+        self.render_list([TileRenderItem(label=f"Error: {message}")])
 
     async def on_list_view_selected(self, event: ListView.Selected) -> None:
         item = event.item

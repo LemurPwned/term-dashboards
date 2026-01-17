@@ -13,7 +13,9 @@ class StocksTile(BaseTile):
     title = "Stocks"
 
     def fetch_data(self) -> dict[str, Any]:
-        tickers_config = self.config.get("tickers", [])
+        tickers_config = [
+            item for item in self.config.get("tickers", []) if isinstance(item, dict)
+        ]
         symbols = [item.get("symbol") for item in tickers_config if item.get("symbol")]
         if not symbols:
             return {"rows": [], "currency": self.config.get("currency", "USD")}
@@ -29,30 +31,37 @@ class StocksTile(BaseTile):
             history_values: list[float] = []
             changes: dict[str, float | None] = {}
             if ticker is not None:
-                info = getattr(ticker, "fast_info", {}) or {}
-                price = info.get("last_price")
-                if price is None:
-                    price = (ticker.info or {}).get("regularMarketPrice")
-                history_cache: dict[str, list[float]] = {}
-                for period in delta_periods:
-                    normalized_period = self._normalize_period(period)
-                    interval = str(
-                        self.config.get(
-                            "history_interval", self._interval_for_period(normalized_period)
+                try:
+                    info = getattr(ticker, "fast_info", {}) or {}
+                    price = info.get("last_price")
+                    if price is None:
+                        price = (ticker.info or {}).get("regularMarketPrice")
+                    history_cache: dict[str, list[float]] = {}
+                    for period in delta_periods:
+                        normalized_period = self._normalize_period(period)
+                        interval = str(
+                            self.config.get(
+                                "history_interval", self._interval_for_period(normalized_period)
+                            )
                         )
-                    )
-                    history = ticker.history(period=normalized_period, interval=interval)
-                    if not history.empty and "Close" in history:
-                        values = [float(val) for val in history["Close"].tolist()]
-                        history_cache[period] = values
-                        if len(values) >= 2:
-                            changes[period] = values[-1] - values[0]
+                        try:
+                            history = ticker.history(period=normalized_period, interval=interval)
+                        except Exception:  # noqa: BLE001
+                            history = None
+                        if history is not None and getattr(history, "empty", True) is False and "Close" in history:
+                            values = [float(val) for val in history["Close"].tolist()]
+                            history_cache[period] = values
+                            if len(values) >= 2:
+                                changes[period] = values[-1] - values[0]
+                            else:
+                                changes[period] = None
                         else:
+                            history_cache[period] = []
                             changes[period] = None
-                    else:
-                        history_cache[period] = []
-                        changes[period] = None
-                history_values = history_cache.get(sparkline_period, [])
+                    history_values = history_cache.get(sparkline_period, [])
+                except Exception:  # noqa: BLE001
+                    history_values = []
+                    changes = {}
             units = units_map.get(symbol, 0)
             value = price * units if price is not None else None
             rows.append(

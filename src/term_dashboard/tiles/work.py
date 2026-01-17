@@ -125,12 +125,17 @@ class WorkTile(ListTile):
         return output
 
     def _fetch_linear(self, token: str) -> list[dict[str, Any]]:
-        max_items = int(self.config.get("linear_max_items", 8))
+        max_items = int(self.config.get("linear_max_items", 100))
         headers = {"Authorization": token, "Content-Type": "application/json"}
         filter_mode = str(self.config.get("linear_filter", "assigned"))
-        issue_filter = None
+        exclude_completed = bool(self.config.get("linear_exclude_completed", True))
+        issue_filter: dict[str, Any] = {}
+        if exclude_completed:
+            issue_filter["state"] = {"type": {"neq": "completed"}}
         if filter_mode == "assigned_current_cycle":
-            issue_filter = {"cycle": {"isActive": {"eq": True}}}
+            issue_filter["cycle"] = {"isActive": {"eq": True}}
+        if not issue_filter:
+            issue_filter = None
 
         query = """
         query AssignedIssues($first: Int!, $filter: IssueFilter) {
@@ -141,7 +146,7 @@ class WorkTile(ListTile):
                 url
                 createdAt
                 dueDate
-                state { name }
+                state { name type }
                 cycle { name }
               }
             }
@@ -150,7 +155,8 @@ class WorkTile(ListTile):
         """
         nodes = self._fetch_linear_nodes(headers, query, max_items, issue_filter)
         if filter_mode == "assigned_current_cycle" and not nodes:
-            nodes = self._fetch_linear_nodes(headers, query, max_items, None)
+            fallback_filter = {"state": {"type": {"neq": "completed"}}} if exclude_completed else None
+            nodes = self._fetch_linear_nodes(headers, query, max_items, fallback_filter)
         return [
             {
                 "title": node.get("title", "Untitled"),
