@@ -1,0 +1,5 @@
+vault_paths:
+  - /Users/jm/Documents/ML
+  - /Users/jm/Documents/Simulations
+max_results: 20
+open_in_nvim: true

@@ -1,0 +1,5 @@
+refresh_interval_minutes: 5
+layout:
+  min_tile_width: 40
+  max_columns: 3
+  gap: 1

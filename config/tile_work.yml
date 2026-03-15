@@ -1,0 +1,6 @@
+github_max_items: 8
+linear_max_items: 100
+linear_filter: assigned
+linear_exclude_completed: true
+open_links_in_terminal: false
+# github_user: your-handle

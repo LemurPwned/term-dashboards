@@ -1,0 +1,6 @@
+feed_url: "https://www.ft.com/myft/following/b68eefd1-78bb-4ced-b6a1-226658b58079.rss"
+max_items: 10
+open_links_in_terminal: false
+auth:
+  bearer_token: ""
+  cookies: ""

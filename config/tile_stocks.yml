@@ -1,0 +1,13 @@
+tickers:
+  - symbol: MSI
+    units: 205
+  - symbol: VWRA.L
+    units: 135
+  - symbol: SWRD
+    units: 347
+currency: USD
+max_rows: 8
+delta_periods:
+  - 5d
+  - 6mo
+  - 1yr
