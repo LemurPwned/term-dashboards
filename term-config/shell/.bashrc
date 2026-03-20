@@ -57,24 +57,35 @@ if [ -n "$force_color_prompt" ]; then
 fi
 
 if [ "$color_prompt" = yes ]; then
-    __ghostty_git_branch() {
-        git branch --show-current 2>/dev/null
+    __ghostty_git_ref() {
+        git symbolic-ref --quiet --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null
     }
 
-    PS1='${debian_chroot:+($debian_chroot)}\[\033[38;5;45m\]\u\[\033[0m\] at \[\033[38;5;213m\]\h\[\033[0m\] in \[\033[38;5;111m\]\w\[\033[0m\]$(branch="$(__ghostty_git_branch)"; if [ -n "$branch" ]; then printf " \\[\\033[38;5;220m\\][git:%s]\\[\\033[0m\\]" "$branch"; fi)\n\[\033[38;5;82m\]\$\[\033[0m\] '
+    __ghostty_prompt_command() {
+        local git_ref branch_segment title_prefix
+
+        git_ref="$(__ghostty_git_ref)"
+        branch_segment=''
+        if [ -n "$git_ref" ]; then
+            branch_segment=" \[\033[38;5;45m\]on\[\033[0m\] \[\033[48;5;57m\]\[\033[38;5;195m\] git:${git_ref} \[\033[0m\]"
+        fi
+
+        title_prefix=''
+        case "$TERM" in
+        xterm*|rxvt*)
+            title_prefix="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]"
+            ;;
+        esac
+
+        PS1="${title_prefix}${debian_chroot:+($debian_chroot)}\[\033[38;5;45m\]\u\[\033[0m\] at \[\033[38;5;213m\]\h\[\033[0m\] in \[\033[38;5;111m\]\w\[\033[0m\]${branch_segment}\n\[\033[38;5;82m\]\$\[\033[0m\] "
+    }
+
+    PROMPT_COMMAND="__ghostty_prompt_command${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
+    __ghostty_prompt_command
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
 unset color_prompt force_color_prompt
-
-# If this is an xterm set the title to user@host:dir
-case "$TERM" in
-xterm*|rxvt*)
-    PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
-    ;;
-*)
-    ;;
-esac
 
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
