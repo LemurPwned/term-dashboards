@@ -1,0 +1,26 @@
+theme = cyber_punk_neon
+# monospace
+# https://usgraphics.com/products/berkeley-mono
+font-family = "Berkeley Mono Variable"
+font-variation = wght=300
+font-variation = wdth=100
+font-family-bold = "Berkeley Mono Variable"
+font-variation-bold = wght=800
+font-size = 13.5
+
+background-opacity = 0.9999
+background-opacity-cells = true
+background-blur = true
+window-padding-x = 16
+window-padding-y = 14
+window-theme = ghostty
+window-titlebar-background = #141420
+window-titlebar-foreground = #cdd6f4
+window-title-font-family = "Ubuntu Sans"
+window-show-tab-bar = always
+gtk-titlebar = true
+gtk-tabs-location = top
+cursor-style = bar
+cursor-style-blink = false
+mouse-hide-while-typing = true
+minimum-contrast = 1.1
